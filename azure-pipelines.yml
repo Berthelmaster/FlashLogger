@@ -26,8 +26,9 @@ steps:
   displayName: 'dotnet build Messages'
   inputs:
     command: 'build'
-    arguments: '-c $(buildConfiguration)'
+    arguments: '-c $(buildConfiguration) /p:TargetFramework=netcoreapp3.1'
     projects: '**/*.csproj'
+
 
 - task: VSTest@2
   inputs:
