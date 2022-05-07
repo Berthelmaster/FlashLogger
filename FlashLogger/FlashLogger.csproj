@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
     <CopyRefAssembliesToPublishDirectory>false</CopyRefAssembliesToPublishDirectory>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	<IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
