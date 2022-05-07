@@ -49,6 +49,13 @@ steps:
     packagesToPack: '**/*.csproj'
     packDestination: '$(Build.ArtifactStagingDirectory)'
 
+# Push a project
+- task: NuGetCommand@2
+  inputs:
+    command: 'push'
+    feedsToUse: 'config'
+    includeNugetOrg: true
+  
 - task: VSTest@2
   inputs:
     platform: '$(buildPlatform)'
