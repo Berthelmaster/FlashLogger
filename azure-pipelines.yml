@@ -22,39 +22,24 @@ steps:
     restoreSolution: '$(solution)'
 
 
+# The first task is the dotnet command build, pointing to our csproj file
 - task: DotNetCoreCLI@2
-  displayName: 'Build 3.1'
+  displayName: 'dotnet build'
   inputs:
     command: 'build'
-    arguments: '-c $(buildConfiguration) /p:TargetFramework=netcoreapp3.1'
-    projects: '**/*.csproj'
-  
-- task: DotNetCoreCLI@2
-  displayName: 'Build 5.0'
-  inputs:
-    command: 'build'
-    arguments: '-c $(buildConfiguration) /p:TargetFramework=net5.0'
-    projects: '**/*.csproj'
+    arguments: '--configuration $(buildConfiguration)'
+    projects: 'FlashLogger/FlashLogger.csproj'
 
+# The second task is dotnet pack command again pointing to the csproj file
+# The nobuild means the project will not be compiled before running pack, because its already built in above step
 - task: DotNetCoreCLI@2
-  displayName: 'Build 6.0'
-  inputs:
-    command: 'build'
-    arguments: '-c $(buildConfiguration) /p:TargetFramework=net6.0'
-    projects: '**/*.csproj'
-
-- task: NuGetCommand@2
+  displayName: "dotnet pack"
   inputs:
     command: 'pack'
-    packagesToPack: '**/*.csproj'
-    packDestination: '$(Build.ArtifactStagingDirectory)'
-
-# Push a project
-- task: NuGetCommand@2
-  inputs:
-    command: 'push'
-    feedsToUse: 'config'
-    includeNugetOrg: true
+    arguments: '--configuration $(buildConfiguration)'
+    packagesToPack: 'FlashLogger/FlashLogger.csproj'
+    nobuild: true
+    versioningScheme: 'off'
   
 - task: VSTest@2
   inputs:
