@@ -43,6 +43,12 @@ steps:
     arguments: '-c $(buildConfiguration) /p:TargetFramework=net6.0'
     projects: '**/*.csproj'
 
+- task: NuGetCommand@2
+  inputs:
+    command: 'pack'
+    packagesToPack: '**/*.csproj'
+    packDestination: '$(Build.ArtifactStagingDirectory)'
+
 - task: VSTest@2
   inputs:
     platform: '$(buildPlatform)'
