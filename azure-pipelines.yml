@@ -41,16 +41,17 @@ steps:
     nobuild: true
     versioningScheme: 'off'
   
-- task: VSTest@2
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet push'
   inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-
+    command: push
+    nuGetFeedType: external
+    publishFeedCredentials: 'Nuget.org svc conn'
+  enabled: false
 - task: NuGetCommand@2
-  displayName: 'nuget push'
+  displayName: 'NuGet push'
   inputs:
-    command: 'push'
-    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
-    includeNuGetOrg: true
-    versioningScheme: 'off'
-    allowPackageConflicts: true
+    command: push
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
+    nuGetFeedType: external
+    publishFeedCredentials: 'Nuget.org svc conn'
