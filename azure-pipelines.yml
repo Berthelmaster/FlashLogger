@@ -61,13 +61,13 @@ jobs:
       arguments: '--configuration $(BuildConfiguration) --collect "Code coverage'
       
   - task: DotNetCoreCLI@2
-  displayName: Publish web projects
-  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-  inputs:
-    command: publish
-    publishWebProjects: True
-    arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
-    zipAfterPublish: true
+    displayName: Publish web projects
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    inputs:
+      command: publish
+      publishWebProjects: True
+      arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
+      zipAfterPublish: true
 
   - task: DotNetCoreCLI@2
     displayName: Publish functions
