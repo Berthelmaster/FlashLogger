@@ -30,7 +30,7 @@ jobs:
 - job: Job_1
   displayName: Agent job 1
   pool:
-    name: Dynamicweb-Staging
+    name: Azure Pipelines
   steps:
   - checkout: self
   
