@@ -1,57 +1,104 @@
-# ASP.NET
-# Build and test ASP.NET projects.
-# Add steps that publish symbols, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
-
-trigger:
-- main
-
-pool:
-  vmImage: 'windows-latest'
+name: $(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+- name: BuildParameters.RestoreBuildProjects
+  value: '**/*.csproj'
+- name: BuildParameters.TestProjects
+  value: '**/Products.Tests.csproj'
+- name: BuildConfiguration
+  value: Release
 
-steps:
-- task: NuGetToolInstaller@1
+trigger:
+  branches:
+    include:
+    - master
+    - main
+    - release/*
 
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
+pr:
+ branches:
+   exclude:
+     - '*'
 
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: master
 
-# The first task is the dotnet command build, pointing to our csproj file
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet build'
-  inputs:
-    command: 'build'
-    arguments: '--configuration $(buildConfiguration)'
-    projects: 'FlashLogger/FlashLogger.csproj'
-
-# The second task is dotnet pack command again pointing to the csproj file
-# The nobuild means the project will not be compiled before running pack, because its already built in above step
-- task: DotNetCoreCLI@2
-  displayName: "dotnet pack"
-  inputs:
-    command: 'pack'
-    arguments: '--configuration $(buildConfiguration)'
-    packagesToPack: 'FlashLogger/FlashLogger.csproj'
-    nobuild: true
-    versioningScheme: 'off'
+jobs:
+- job: Job_1
+  displayName: Agent job 1
+  pool:
+    name: Dynamicweb-Staging
+  steps:
+  - checkout: self
   
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet push'
+  - task: UseDotNet@2
+    displayName: Use .Net Core sdk 6.0.x
+    inputs:
+      version: 6.0.x
+  
+  - task: DotNetCoreCLI@2
+    displayName: Restore
+    inputs:
+      command: restore
+      projects: '**/*.csproj'
+      feedsToUse: config
+      nugetConfigPath: nuget.config
+  
+  - task: DotNetCoreCLI@2
+    displayName: Build
+    inputs:
+      projects: '**/*.csproj'
+      arguments: '--configuration $(BuildConfiguration)'
+    
+  - task: DotNetCoreCLI@2
+    displayName: Test
+    inputs:
+      command: test
+      projects: 'tests/**/*.csproj'
+      arguments: '--configuration $(BuildConfiguration) --collect "Code coverage'
+      
+  - task: DotNetCoreCLI@2
+  displayName: Publish web projects
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
   inputs:
-    command: push
-    nuGetFeedType: external
-    publishFeedCredentials: 'Nuget public feed'
-  enabled: false
-- task: NuGetCommand@2
-  displayName: 'NuGet push'
-  inputs:
-    command: push
-    packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
-    nuGetFeedType: external
-    publishFeedCredentials: 'Nuget public feed'
+    command: publish
+    publishWebProjects: True
+    arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
+    zipAfterPublish: true
+
+  - task: DotNetCoreCLI@2
+    displayName: Publish functions
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    inputs:
+        command: publish
+        publishWebProjects: False
+        projects: '**/*.Functions.csproj'
+        arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
+        zipAfterPublish: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact'
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    inputs:
+      PathtoPublish: '$(build.artifactstagingdirectory)'
+  
+  - task: DotNetCoreCLI@2
+    displayName: dotnet pack
+    inputs:
+      command: pack
+      searchPatternPack: 'src/**/*.csproj'
+      versioningScheme: byEnvVar
+      versionEnvVar: 'GitVersion.SemVer'
+  
+  - task: NuGetCommand@2
+    displayName: NuGet push
+    inputs:
+        command: 'push'
+        packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
+        nuGetFeedType: 'internal'
+        publishVstsFeed: 'd3f77f23-18b0-4c7e-82f0-684647c813f7'
+        allowPackageConflicts: true
+...
