@@ -62,7 +62,7 @@ jobs:
       
   - task: DotNetCoreCLI@2
     displayName: Publish web projects
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest')), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')
     inputs:
       command: publish
       publishWebProjects: True
@@ -71,7 +71,7 @@ jobs:
 
   - task: DotNetCoreCLI@2
     displayName: Publish functions
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest')), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')
     inputs:
         command: publish
         publishWebProjects: False
@@ -81,7 +81,7 @@ jobs:
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact'
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest')), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')
     inputs:
       PathtoPublish: '$(build.artifactstagingdirectory)'
   
